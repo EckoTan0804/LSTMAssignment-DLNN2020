@@ -28,10 +28,10 @@ def softmax(x):
 
 
 # data I/O
-data = open('data/input.txt', 'r').read()  # should be simple plain text file
+data = open("data/input.txt", "r").read()  # should be simple plain text file
 chars = sorted(list(set(data)))
 data_size, vocab_size = len(data), len(chars)
-print('data has %d characters, %d unique.' % (data_size, vocab_size))
+print("data has %d characters, %d unique." % (data_size, vocab_size))
 char_to_ix = {ch: i for i, ch in enumerate(chars)}
 ix_to_char = {i: ch for i, ch in enumerate(chars)}
 std = 0.1
@@ -116,13 +116,12 @@ def forward(inputs, targets, memory):
         # c_t = f * c_(t-1) + i * c_
 
         # output gate
-        #o = sigmoid(Wo * z + bo)
+        # o = sigmoid(Wo * z + bo)
 
         # DONE LSTM
         # output layer - softmax and cross-entropy loss
         # unnormalized log probabilities for next chars
         # softmax for probabilities for next chars
-
 
         # label
         ls[t] = np.zeros((vocab_size, batch_size))
@@ -135,7 +134,7 @@ def forward(inputs, targets, memory):
         # loss += -np.log(ps[t][targets[t],0])
 
     # activations = ()
-    memory = (hs[- 1], cs[-1])
+    memory = (hs[-1], cs[-1])
 
     return loss, activations, memory
 
@@ -158,6 +157,7 @@ def backward(activations, clipping=True):
     # back propagation through time starts here
     for t in reversed(range(input_length)):
         # computing the gradients here
+        None
 
     # clip to mitigate exploding gradients
     if clipping:
@@ -192,7 +192,7 @@ def sample(memory, seed_ix, n):
     return ixes
 
 
-if option == 'train':
+if option == "train":
 
     n, p = 0, 0
     n_updates = 0
@@ -215,16 +215,16 @@ if option == 'train':
             cprev = np.zeros((hidden_size, batch_size))
             p = 0  # go from start of data
 
-        inputs = cut_stream[:, p:p + seq_length].T
-        targets = cut_stream[:, p + 1:p + 1 + seq_length].T
+        inputs = cut_stream[:, p : p + seq_length].T
+        targets = cut_stream[:, p + 1 : p + 1 + seq_length].T
 
         # sample from the model now and then
         if n % 200 == 0:
             h_zero = np.zeros((hidden_size, 1))  # reset RNN memory
             c_zero = np.zeros((hidden_size, 1))
             sample_ix = sample((h_zero, c_zero), inputs[0][0], 2000)
-            txt = ''.join(ix_to_char[ix] for ix in sample_ix)
-            print('----\n %s \n----' % (txt,))
+            txt = "".join(ix_to_char[ix] for ix in sample_ix)
+            print("----\n %s \n----" % (txt,))
 
         # forward seq_length characters through the net and fetch gradient
         loss, activations, memory = forward(inputs, targets, (hprev, cprev))
@@ -232,14 +232,16 @@ if option == 'train':
         gradients = backward(activations)
 
         dWex, dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWhy, dby = gradients
-        smooth_loss = smooth_loss * 0.999 + loss/batch_size * 0.001
+        smooth_loss = smooth_loss * 0.999 + loss / batch_size * 0.001
         if n % 20 == 0:
-            print('iter %d, loss: %f' % (n, smooth_loss))  # print progress
+            print("iter %d, loss: %f" % (n, smooth_loss))  # print progress
 
         # perform parameter update with Adagrad
-        for param, dparam, mem in zip([Wf, Wi, Wo, Wc, bf, bi, bo, bc, Wex, Why, by],
-                                      [dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWex, dWhy, dby],
-                                      [mWf, mWi, mWo, mWc, mbf, mbi, mbo, mbc, mWex, mWhy, mby]):
+        for param, dparam, mem in zip(
+            [Wf, Wi, Wo, Wc, bf, bi, bo, bc, Wex, Why, by],
+            [dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWex, dWhy, dby],
+            [mWf, mWi, mWo, mWc, mbf, mbi, mbo, mbc, mWex, mWhy, mby],
+        ):
             mem += dparam * dparam
             param += -learning_rate * dparam / np.sqrt(mem + 1e-8)  # adagrad update
 
@@ -249,15 +251,15 @@ if option == 'train':
         if n_updates >= max_updates:
             break
 
-elif option == 'gradcheck':
+elif option == "gradcheck":
 
     data_length = cut_stream.shape[1]
 
     p = 0
     # inputs = [char_to_ix[ch] for ch in data[p:p + seq_length]]
     # targets = [char_to_ix[ch] for ch in data[p + 1:p + seq_length + 1]]
-    inputs = cut_stream[:, p:p + seq_length].T
-    targets = cut_stream[:, p + 1:p + 1 + seq_length].T
+    inputs = cut_stream[:, p : p + seq_length].T
+    targets = cut_stream[:, p + 1 : p + 1 + seq_length].T
 
     delta = 0.0001
 
@@ -270,12 +272,14 @@ elif option == 'gradcheck':
     gradients = backward(activations, clipping=False)
     dWex, dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWhy, dby = gradients
 
-    for weight, grad, name in zip([Wf, Wi, Wo, Wc, bf, bi, bo, bc, Wex, Why, by],
-                                  [dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWex, dWhy, dby],
-                                  ['Wf', 'Wi', 'Wo', 'Wc', 'bf', 'bi', 'bo', 'bc', 'Wex', 'Why', 'by']):
+    for weight, grad, name in zip(
+        [Wf, Wi, Wo, Wc, bf, bi, bo, bc, Wex, Why, by],
+        [dWf, dWi, dWo, dWc, dbf, dbi, dbo, dbc, dWex, dWhy, dby],
+        ["Wf", "Wi", "Wo", "Wc", "bf", "bi", "bo", "bc", "Wex", "Why", "by"],
+    ):
 
-        str_ = ("Dimensions dont match between weight and gradient %s and %s." % (weight.shape, grad.shape))
-        assert (weight.shape == grad.shape), str_
+        str_ = "Dimensions dont match between weight and gradient %s and %s." % (weight.shape, grad.shape)
+        assert weight.shape == grad.shape, str_
 
         print(name)
         countidx = 0
@@ -300,16 +304,21 @@ elif option == 'gradcheck':
             gradanasum += grad_analytic
             rel_error = abs(grad_analytic - grad_numerical) / abs(grad_numerical + grad_analytic)
             if rel_error is None:
-                rel_error = 0.
+                rel_error = 0.0
             relerrorsum += rel_error
 
             if rel_error > 0.001:
-                print ('WARNING %f, %f => %e ' % (grad_numerical, grad_analytic, rel_error))
+                print("WARNING %f, %f => %e " % (grad_numerical, grad_analytic, rel_error))
                 countidx += 1
                 erroridx.append(i)
-                
-        print('For %s found %i bad gradients; with %i total parameters in the vector/matrix!' % (
-            name, countidx, weight.size))
-        print(' Average numerical grad: %0.9f \n Average analytical grad: %0.9f \n Average relative grad: %0.9f' % (
-            gradnumsum / float(weight.size), gradanasum / float(weight.size), relerrorsum / float(weight.size)))
-        print(' Indizes at which analytical gradient does not match numerical:', erroridx)
+
+        print(
+            "For %s found %i bad gradients; with %i total parameters in the vector/matrix!"
+            % (name, countidx, weight.size)
+        )
+        print(
+            " Average numerical grad: %0.9f \n Average analytical grad: %0.9f \n Average relative grad: %0.9f"
+            % (gradnumsum / float(weight.size), gradanasum / float(weight.size), relerrorsum / float(weight.size))
+        )
+        print(" Indizes at which analytical gradient does not match numerical:", erroridx)
+
